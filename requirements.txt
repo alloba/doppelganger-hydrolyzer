@@ -1,4 +1,3 @@
 numpy
 opencv-python
-scipy
-matplotlib
+dtw-python

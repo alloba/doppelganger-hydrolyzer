@@ -4,13 +4,16 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
+import videoprocessor as vp
+import analytics
+import csv
 
 if __name__ != '__main__':
     print('Cannot run this program as a supporting module.')
     sys.exit(1)
 
 
-def get_target_files(directory):
+def get_files_list(directory):
     dir_sanitized = directory if directory.endswith("/") else directory + '/'
     if directory is None:
         files = os.listdir('')
@@ -20,104 +23,80 @@ def get_target_files(directory):
     return [dir_sanitized + x for x in files if os.path.isfile(dir_sanitized + x)]
 
 
-def save_target_frame(file, target_frame, out_dir):
-    capture = cv2.VideoCapture(file)
-    i = 0
-    while capture.isOpened():
-        ret, frame = capture.read()
-        if ret is False or i > target_frame:
-            break
-        if i == target_frame:
-            cv2.imwrite(out_dir + '/' + 'testout-frame' + str(target_frame) + '.jpg', frame)
-        i += 1
-
-    capture.release()
-    cv2.destroyAllWindows()
+def load_pointmap(file):
+    with open(file) as csvfile:
+        output = []
+        for row in csvfile.readlines():
+            vals = [float(vals.strip()) for vals in row.split(",")]
+            output.append(vals)
+        return output
 
 
-def get_average_color(image):
-    # https://www.timpoulsen.com/2018/finding-the-dominant-colors-of-an-image.html
-    height, width, _ = np.shape(image)
+# Extract data points from all files in the target folder.
+# Should attempt to skip processing for data that already exists to save time in case of edited data / paused execution
+def process_video_pointmaps(image_file_list, output_directory):
+    for index, file_path in enumerate(image_file_list):
+        print(f'Processing {index + 1} of {len(image_file_list)} files...')
+        target_file = output_directory + file_path.split('/')[-1].split('.')[0] + '.txt'
 
-    # calculate the average color of each row of our image
-    avg_color_per_row = np.average(image, axis=0)
+        if os.path.isfile(target_file):
+            print(f'\tData already exists for {file_path} in output directory -- Skipping processing.')
+            continue
 
-    # calculate the averages of our rows
-    avg_colors = np.average(avg_color_per_row, axis=0)
-
-    # avg_color is a tuple in BGR order of the average colors
-    # but as float values
-    return avg_colors
-
-
-def calculate_video_averages(file):
-    capture = cv2.VideoCapture(file)
-    try:
-        frame_number = 0
-        averages = []
-        while capture.isOpened():
-            frame_number += 1
-            ret, frame_image = capture.read()
-            if ret is False:
-                break
-            average_rgb = get_average_color(frame_image)
-            averages.append(average_rgb.tolist())
-        return averages
-    finally:
-        capture.release()
-        cv2.destroyAllWindows()
+        color_average = vp.calculate_video_averages(file_path)
+        vp.save_video_data(color_average, target_file)
+    print('\n')
 
 
-# def plot_example():
-#     fig = plt.figure()
-#     ax = fig.gca(projection='3d')
-#
-#     # plotting the points
-#     max_x = 0
-#     max_y = 0
-#     max_z = 0
-#     for p in tst_list:
-#         if max_x < p[0]:
-#             max_x = p[0]
-#         if max_y < p[1]:
-#             max_y = p[1]
-#         if max_z < p[2]:
-#             max_z = p[2]
-#         ax.scatter(p[0], p[1], p[2], zdir='z', c='r')
-#
-#     ax.legend()
-#     # ax.set_xlim3d(0, 1)
-#     # ax.set_ylim3d(0, 2)
-#     # ax.set_zlim3d(0, 3)
-#     ax.set_xlim3d(0, max_x)
-#     ax.set_ylim3d(0, max_y)
-#     ax.set_zlim3d(0, max_z)
-#
-#     plt.show()
+# For all data data collections, run DTW calculations against all of them.
+# Output will be stored in files with the name of the comparing file.
+# Meaning, for files a,b,c there will be 3 files named a,b,c with 3 distances + filenames inside.
+def process_dtw_crossover(pointmap_file_list, output_dir):
+    print(f'Processing DTW values for {len(pointmap_file_list)} files...')
+    print(f'Outputting results to {output_dir}')
+    for i in pointmap_file_list:
+        output_text = ''
+        for j in pointmap_file_list:
+            ii = load_pointmap(i)
+            jj = load_pointmap(j)
+            dist = analytics.dtw_distance_d(ii, jj)
+
+            output_text += f'{j}, {dist}\n'
+        with open(output_dir + i.split('/')[-1].split('.')[0] + '.txt', 'w') as out_file:
+            out_file.write(output_text)
+    print('\n')
 
 
-def save_video_data(color_avg_array, target_file):
-    write_string = ''
-    for nested_list in color_avg_array:
-        write_string += ', '.join(map(str, nested_list)) + '\n'
-    with open(target_file, 'w') as f:
-        f.write(write_string)
+def collate_dtw_data(dtw_files_list, output_dir):
+    print('Collating results into single file...')
+    output_txt = ''
+    for f in dtw_files_list:
+        filename = f.split('/')[-1].split('.')[0]
+        ff = open(f, 'r')
+        data = ff.readlines()
+        for d in data:
+            target_file = d.split(',')[0].strip().split('/')[-1].split('.')[0]
+            distance = d.split(',')[1].strip()
+            output_txt += f'{filename}, {target_file}, {distance}\n'
+    with open(output_dir + '/collated.txt', 'w') as outfile:
+        outfile.write(output_txt)
+    print('Complete')
 
-    print(f'\t{len(color_avg_array)} data points.')
+
+# testpoints1 = load_pointmap(OUTPUT_DIRECTORY + '1.webm.txt')
+# testpoints2 = load_pointmap(OUTPUT_DIRECTORY + '1_copy.webm.txt')
+# z = analytics.dtw_distance_i(testpoints1, testpoints2, 3)
+# a = analytics.dtw_distance_d(testpoints1, testpoints2)
 
 
-TARGET_DIRECTORY = os.getcwd() + '/test-files/'
+IMAGE_SOURCE_DIRECTORY = os.getcwd() + '/test-files/'
+PTMAP_SOURCE_DIRECTORY = IMAGE_SOURCE_DIRECTORY + 'output/'
+DTW_SOURCE_DIRECTORY = IMAGE_SOURCE_DIRECTORY + 'dtw-out/'
+COLLATE_SOURCE_DIRECTORY = IMAGE_SOURCE_DIRECTORY + 'collate-out/'
 
-image_files = get_target_files(TARGET_DIRECTORY)
 
-for index, file_path in enumerate(image_files):
-    print(f'Processing {index + 1} of {len(image_files)} files...')
-    target_file = TARGET_DIRECTORY + '/output/' + file_path.split('/')[-1] + '.txt'
-
-    if os.path.isfile(target_file):
-        print(f'\tData already exists for {file_path} in output directory -- Skipping processing.')
-        continue
-
-    color_average = calculate_video_averages(file_path)
-    save_video_data(color_average, target_file)
+# image_files = get_files_list(SOURCE_DIRECTORY)
+process_video_pointmaps(get_files_list(IMAGE_SOURCE_DIRECTORY), PTMAP_SOURCE_DIRECTORY)
+process_dtw_crossover(get_files_list(PTMAP_SOURCE_DIRECTORY), DTW_SOURCE_DIRECTORY)
+collate_dtw_data(get_files_list(DTW_SOURCE_DIRECTORY), COLLATE_SOURCE_DIRECTORY)
 
