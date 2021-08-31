@@ -69,7 +69,7 @@ def process_dtw_crossover(pointmap_file_list, output_dir):
 
 def collate_dtw_data(dtw_files_list, output_dir):
     print('Collating results into single file...')
-    output_txt = ''
+    output_txt = 'source,target,weight\n'
     for f in dtw_files_list:
         filename = f.split('/')[-1].split('.')[0]
         ff = open(f, 'r')
@@ -78,15 +78,9 @@ def collate_dtw_data(dtw_files_list, output_dir):
             target_file = d.split(',')[0].strip().split('/')[-1].split('.')[0]
             distance = d.split(',')[1].strip()
             output_txt += f'{filename}, {target_file}, {distance}\n'
-    with open(output_dir + '/collated.txt', 'w') as outfile:
+    with open(output_dir + '/collated.csv', 'w') as outfile:
         outfile.write(output_txt)
     print('Complete')
-
-
-# testpoints1 = load_pointmap(OUTPUT_DIRECTORY + '1.webm.txt')
-# testpoints2 = load_pointmap(OUTPUT_DIRECTORY + '1_copy.webm.txt')
-# z = analytics.dtw_distance_i(testpoints1, testpoints2, 3)
-# a = analytics.dtw_distance_d(testpoints1, testpoints2)
 
 
 IMAGE_SOURCE_DIRECTORY = os.getcwd() + '/test-files/'
@@ -94,8 +88,6 @@ PTMAP_SOURCE_DIRECTORY = IMAGE_SOURCE_DIRECTORY + 'output/'
 DTW_SOURCE_DIRECTORY = IMAGE_SOURCE_DIRECTORY + 'dtw-out/'
 COLLATE_SOURCE_DIRECTORY = IMAGE_SOURCE_DIRECTORY + 'collate-out/'
 
-
-# image_files = get_files_list(SOURCE_DIRECTORY)
 process_video_pointmaps(get_files_list(IMAGE_SOURCE_DIRECTORY), PTMAP_SOURCE_DIRECTORY)
 process_dtw_crossover(get_files_list(PTMAP_SOURCE_DIRECTORY), DTW_SOURCE_DIRECTORY)
 collate_dtw_data(get_files_list(DTW_SOURCE_DIRECTORY), COLLATE_SOURCE_DIRECTORY)
