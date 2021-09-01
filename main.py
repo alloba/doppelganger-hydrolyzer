@@ -17,6 +17,7 @@ def load_pointmap(file):
 
         return output
 
+
 if __name__ == '__main__':
     # These all clearly need to change depending on dataset.
     IMAGE_SOURCE_DIRECTORY = os.getcwd() + '/../_mediastore/gondola/'

@@ -29,5 +29,9 @@ MoviePy might be a nice simple solution. It's very oriented towards video editin
 
 - Data set is 18.6 GB at time of writing. 
 - Slightly over 5000 files in the dataset.
-
-
+- some videos fail to process. This is probably due to a bug(?) in versions of ffmpeg. 
+  the file has a goofed image buffer or whatever, and it errors out. 
+  ffmpeg itself can bypass this with a flag (`-max_muxing_queue_size 9999`), but this really doesn't trickle down 
+  to the opencv usage. and workarounds with the os environment seem to not work either. 
+    - trying the conda version of opencv to see if it uses a newer version of ffmpeg without the issue. (didnt)
+    - `ffmpeg -vsync drop -i broken.webm -vcodec copy new.webm`

@@ -28,7 +28,7 @@ def calculate_video_averages(file):
         while capture.isOpened():
             frame_number += 1
             ret, frame_image = capture.read()
-            if ret is False:
+            if ret is False:  # false is unsuccessful read.
                 break
             average_rgb = get_average_color(frame_image)
             averages.append(average_rgb.tolist())
