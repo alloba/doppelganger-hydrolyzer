@@ -1,3 +1,6 @@
+drop table if exists connection_data;
+drop table if exists rgb_averages;
+
 create table if not exists  connection_data
 (
     "source"   TEXT,
@@ -12,6 +15,3 @@ create table if not exists rgb_averages
     "g"   NUMBER,
     "b"   NUMBER
 );
-
-drop table if exists connection_data;
-drop table if exists rgb_averages;
