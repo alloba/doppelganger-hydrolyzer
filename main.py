@@ -20,10 +20,10 @@ def load_pointmap(file):
 
 if __name__ == '__main__':
     # These all clearly need to change depending on dataset.
-    IMAGE_SOURCE_DIRECTORY = os.getcwd() + '/../_mediastore/gondola/'
-    PTMAP_SOURCE_DIRECTORY = os.getcwd() + '/../_mediastore/gondola_analytics/' + 'pointmap-out/'
-    DTW_SOURCE_DIRECTORY = os.getcwd() + '/../_mediastore/gondola_analytics/' + 'dtw-out/'
-    COLLATE_SOURCE_DIRECTORY = os.getcwd() + '/../_mediastore/gondola_analytics/' + 'collate-out/'
+    IMAGE_SOURCE_DIRECTORY = os.getcwd() + '/../_mediastore/wsg/'
+    PTMAP_SOURCE_DIRECTORY = os.getcwd() + '/../_mediastore/wsg_analytics/' + 'pointmap-out/'
+    DTW_SOURCE_DIRECTORY = os.getcwd() + '/../_mediastore/wsg_analytics/' + 'dtw-out/'
+    COLLATE_SOURCE_DIRECTORY = os.getcwd() + '/../_mediastore/wsg_analytics/' + 'collate-out/'
 
     vp.process_video_pointmaps(util.get_files_list(IMAGE_SOURCE_DIRECTORY), PTMAP_SOURCE_DIRECTORY)
     vp.collate_pointmaps(util.get_files_list(PTMAP_SOURCE_DIRECTORY), COLLATE_SOURCE_DIRECTORY)

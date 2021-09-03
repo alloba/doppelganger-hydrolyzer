@@ -29,7 +29,7 @@ def dtw_distance_i(series1, series2, dimensionality=0):
 def process_dtw_crossover(pointmap_file_list, output_dir):
     print(f'Processing DTW values for {len(pointmap_file_list)} files...')
     print(f'Outputting results to {output_dir}')
-    pool = Pool(multiprocessing.cpu_count() - 1)
+    pool = Pool(multiprocessing.cpu_count() - 4)
     for i in range(len(pointmap_file_list)):
         pool.apply_async(process_single_dtw, args=(pointmap_file_list, output_dir, i))
     pool.close()
@@ -42,7 +42,11 @@ def process_single_dtw(pointmap_file_list, output_dir, index):
     output_text = 'target, dtw\n'
 
     if os.path.isfile(output_dir + pointmap_file_list[index].split('/')[-1].split('.')[0] + '.csv'):
-        return
+        with open(output_dir + pointmap_file_list[index].split('/')[-1].split('.')[0] + '.csv') as existing:
+            if len(existing.readlines()[1:]) < len(pointmap_file_list[index]):
+                print(f'detected incomplete dtw file {pointmap_file_list[index]}. recalculating.')
+            else:
+                return
 
     with open(output_dir + pointmap_file_list[index].split('/')[-1].split('.')[0] + '.csv', 'w') as out_file:
         out_file.write(output_text)

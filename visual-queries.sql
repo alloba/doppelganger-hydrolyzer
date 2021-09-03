@@ -4,7 +4,7 @@
 -- at max distance, you tend to be purely looking at bright/white as a primary color vs dark/black between the two files.
 select * from connection_data c
 where c.source is not c.target
-order by c.distance desc;
+order by c.distance;
 
 select * from connection_data c
 where c.source is 'scr00066gondola2_1nRJN207E4MGRYhDof4pyw'
